@@ -57,7 +57,7 @@ pipeline:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
       - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      - docker push $DOCKER_REPO:${DRONE_TAG}
+      - docker push "$DOCKER_REPO:${DRONE_TAG}"
     when:
       event: tag
 
