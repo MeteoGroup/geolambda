@@ -205,8 +205,8 @@ RUN \
 # Copy shell scripts and config files over
 COPY bin/* /usr/local/bin/
 COPY python/requirements*.txt ./
-RUN pip install --upgrade pip ;\
-    pip install -r requirements-pre.txt; \
-    pip install -r requirements.txt
+RUN pip install --upgrade pip 
+RUN pip install -r requirements-pre.txt
+RUN pip install -r requirements.txt
 
 WORKDIR /home/geolambda

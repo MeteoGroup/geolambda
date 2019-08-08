@@ -30,7 +30,7 @@ pipeline:
     commands:
       - python python/lambda/lambda_function.py 
 
-  docker:
+  publish_latest_images:
     image: docker
     environment:
       - DOCKER_REPO=meteogroup/geolambda-python37
@@ -41,9 +41,26 @@ pipeline:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
       - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      - docker push $DOCKER_REPO:${DRONE_TAG:-latest}
+      - docker push $DOCKER_REPO:latest
+    when:
+      event: push
+      branch: master
+
+  publish_tagged_images:
+    image: docker
+    environment:
+      - DOCKER_REPO=meteogroup/geolambda-python37
+    secrets:
+      - DOCKER_USERNAME
+      - DOCKER_PASSWORD
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - docker push $DOCKER_REPO:${DRONE_TAG}
     when:
       event: tag
+
 
 branches:
   - master
