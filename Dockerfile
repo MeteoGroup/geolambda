@@ -1,4 +1,4 @@
-FROM lambci/lambda:build-provided
+FROM lambci/lambda:build-python3.7 
 
 LABEL maintainer="Development Seed <info@developmentseed.org>"
 LABEL authors="Matthew Hanson  <matt.a.hanson@gmail.com>"
@@ -6,7 +6,7 @@ LABEL authors="Matthew Hanson  <matt.a.hanson@gmail.com>"
 # install system libraries
 RUN \
     yum makecache fast; \
-    yum install -y wget libpng-devel nasm; \
+    yum install -y wget libpng-devel nasm epel; \
     yum install -y bash-completion --enablerepo=epel; \
     yum clean all; \
     yum autoremove
@@ -77,7 +77,8 @@ RUN \
     cd ..; rm -rf curl
 
 # GEOS
-RUN \
+# Added fix for lib path not found
+RUN ln -fs /var/lang/lib/libpython3.7m.so.1.0 /var/lang/lib/libpython3.7.so; \
     mkdir geos; \
 	wget -qO- http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2 \
         | tar xvj -C geos --strip-components=1; cd geos; \
@@ -203,5 +204,9 @@ RUN \
 # 
 # Copy shell scripts and config files over
 COPY bin/* /usr/local/bin/
+COPY python/requirements*.txt ./
+RUN pip install --upgrade pip ;\
+    pip install -r requirements-pre.txt; \
+    pip install -r requirements.txt
 
 WORKDIR /home/geolambda

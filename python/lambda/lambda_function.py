@@ -13,7 +13,8 @@ logger.setLevel(logging.DEBUG)
 from osgeo import gdal
 
 
-test_filename = 'https://landsat-pds.s3.amazonaws.com/c1/L8/086/240/LC08_L1GT_086240_20180827_20180827_01_RT/LC08_L1GT_086240_20180827_20180827_01_RT_B1.TIF'
+#test_filename = 'https://landsat-pds.s3.amazonaws.com/c1/L8/086/240/LC08_L1GT_086240_20180827_20180827_01_RT/LC08_L1GT_086240_20180827_20180827_01_RT_B1.TIF'
+test_filename = '/drone/src/tests/data/wavewatch_blacksea_6min_st2_gfs_fields_20190808_1200.nc'
 
 
 def lambda_handler(event, context=None):
@@ -32,17 +33,14 @@ def lambda_handler(event, context=None):
 
     # process event payload and do something like this
     fname = event.get('filename', test_filename)
-    fname = fname.replace('s3://', '/vsis3/')
     # open and return metadata
     ds = gdal.Open(fname)
-    band = ds.GetRasterBand(1)
-    stats = band.GetStatistics(0, 1)
+    return ds.GetMetadata()
 
-    return stats
 
 
 if __name__ == "__main__":
     """ Test lambda_handler """
     event = {'filename': test_filename}
-    stats = lambda_handler(event)
-    print(stats)
+    metadata = lambda_handler(event)
+    print(metadata)

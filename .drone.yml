@@ -1,0 +1,49 @@
+---
+workspace:
+  base: /drone
+  path: src
+
+
+# Because of drone not building current version of pull request otherwise
+# Suggested by https://github.com/drone/drone/issues/2390#issuecomment-377302134
+clone:
+  git:
+    image: plugins/git:next
+    pull: true
+
+
+pipeline:
+  build:
+    image: docker
+    environment:
+      # Do not use quotes for variable value
+      # because it does not work
+      - DOCKER_BUILD_OPTS=--squash
+      - DOCKER_REPO=meteogroup/geolambda-python37
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - docker build -t "$DOCKER_REPO:${DRONE_TAG:-latest}" $DOCKER_BUILD_OPTS .
+
+  run_tests:
+    image: meteogroup/geolambda-python37 
+    commands:
+      - python python/lambda/lambda_function.py 
+
+  docker:
+    image: docker
+    environment:
+      - DOCKER_REPO=meteogroup/geolambda-python37
+    secrets:
+      - DOCKER_USERNAME
+      - DOCKER_PASSWORD
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - docker push $DOCKER_REPO:${DRONE_TAG:-latest}
+    when:
+      event: tag
+
+branches:
+  - master
