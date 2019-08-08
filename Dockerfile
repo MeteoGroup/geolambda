@@ -25,7 +25,9 @@ ENV \
     LIBJPEG_TURBO_VERSION=2.0.1 \
     PKGCONFIG_VERSION=0.29.2 \
     PROJ_VERSION=5.2.0 \
-    SZIP_VERSION=2.1.1 
+    SZIP_VERSION=2.1.1 \
+    WEBP_VERSION=1.0.1 \
+    ZSTD_VERSION=1.3.8
 
 # Paths to things
 ENV \
@@ -127,6 +129,23 @@ RUN \
     make -j ${NPROC} install; \
     cd ..; rm -rf netcdf
 
+# WEBP
+RUN \
+    mkdir webp; \
+    wget -qO- https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${WEBP_VERSION}.tar.gz \
+        | tar xvz -C webp --strip-components=1; cd webp; \
+    CFLAGS="-O2 -Wl,-S" PKG_CONFIG_PATH="/usr/lib64/pkgconfig" ./configure --prefix=$PREFIX; \
+    make -j ${NPROC} install; \
+    cd ..; rm -rf webp
+
+# ZSTD
+RUN \
+    mkdir zstd; \
+    wget -qO- https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz \
+        | tar -xvz -C zstd --strip-components=1; cd zstd; \
+    make -j ${NPROC} install PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 --silent; \
+    cd ..; rm -rf zstd
+
 # openjpeg
 RUN \
     mkdir openjpeg; \
@@ -169,6 +188,8 @@ RUN \
         --with-hdf4=${PREFIX} \
         --with-hdf5=${PREFIX} \
         --with-netcdf=${PREFIX} \
+        --with-webp=${PREFIX} \
+        --with-zstd=${PREFIX} \
         --with-jpeg=${PREFIX} \
         --with-threads=yes \
 		--with-curl=${PREFIX}/bin/curl-config \
@@ -183,5 +204,9 @@ RUN \
 # 
 # Copy shell scripts and config files over
 COPY bin/* /usr/local/bin/
+COPY python/requirements*.txt ./
+RUN pip install --upgrade pip ;\
+    pip install -r requirements-pre.txt; \
+    pip install -r requirements.txt
 
 WORKDIR /home/geolambda
